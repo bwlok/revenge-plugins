@@ -1,0 +1,14 @@
+{
+    "name": "MoodlesPandas",
+    "description": "Send a random image of a red panda.",
+    "authors": [
+        {
+            "name": "Bwlok",
+            "id": "501827585806827520"
+        }
+    ],
+    "main": "src/index.ts",
+    "vendetta": {
+        "icon": "ic_badge_staff"
+    }
+}
