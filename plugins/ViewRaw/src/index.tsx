@@ -27,27 +27,47 @@ const unpatch = before("openLazy", LazyActionSheet, ([component, key, msg]) => {
         [],
       );
 
+      const navigator = () => (
+        <Navigator
+          initialRouteName="RawPage"
+          goBackOnBackPress
+          screens={{
+            RawPage: {
+              title: "ViewRaw",
+              headerLeft: modalCloseButton?.(() => Navigation.pop()),
+              render: () => <RawPage message={message} />,
+            },
+          }}
+        />
+      );
+
       const actionSheetContainer = findInReactTree(
         component,
         (x) => Array.isArray(x) && x[0]?.type?.name === "ActionSheetRowGroup",
       );
+      const buttons = findInReactTree(
+        component,
+        (x) => x?.[0]?.type?.name === "ButtonRow",
+      );
 
-      if (actionSheetContainer && actionSheetContainer[1]) {
-        const middleGroup = actionSheetContainer[1];
-
-        const navigator = () => (
-          <Navigator
-            initialRouteName="RawPage"
-            goBackOnBackPress
-            screens={{
-              RawPage: {
-                title: "ViewRaw",
-                headerLeft: modalCloseButton?.(() => Navigation.pop()),
-                render: () => <RawPage message={message} />,
-              },
+      if (buttons) {
+        buttons.push(
+          <FormRow
+            label="View Raw"
+            leading={
+              <FormIcon
+                style={{ opacity: 1 }}
+                source={getAssetIDByName("ic_chat_bubble_16px")}
+              />
+            }
+            onPress={() => {
+              LazyActionSheet.hideActionSheet();
+              Navigation.push(navigator);
             }}
-          />
+          />,
         );
+      } else if (actionSheetContainer && actionSheetContainer[1]) {
+        const middleGroup = actionSheetContainer[1];
 
         const ActionSheetRow = middleGroup.props.children[0].type;
 
@@ -77,6 +97,8 @@ const unpatch = before("openLazy", LazyActionSheet, ([component, key, msg]) => {
         );
 
         middleGroup.props.children.push(viewRawButton);
+      } else {
+        console.log("[ViewRaw] Error: Could not find ActionSheet");
       }
     });
   });
