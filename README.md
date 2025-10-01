@@ -10,3 +10,5 @@ Paste a plugin URL into the Plugins page of Revenge
  https://bwlok.github.io/revenge-plugins/ViewRaw
 ### MoodlesPandas
 https://bwlok.github.io/revenge-plugins/MoodlesPandas
+### Decor
+https://bwlok.github.io/revenge-plugins/Decor
