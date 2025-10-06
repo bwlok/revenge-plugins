@@ -87,7 +87,7 @@ export default function Settings() {
 
             <ReactNative.Text style={styles.versionText}>
                 Decor{'\n'}
-                Version 1.0.0
+                Version 1.0.1
 
             </ReactNative.Text>
 

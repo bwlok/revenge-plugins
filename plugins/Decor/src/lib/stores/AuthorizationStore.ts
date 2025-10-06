@@ -1,43 +1,85 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2023 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-import { persist, type StateStorage } from "zustand/middleware";
-import { findByName, findByStoreName } from "@vendetta/metro";
-import { FluxDispatcher, ReactNative } from "@vendetta/metro/common";
-import { id } from "@vendetta/plugin";
-import { create } from "../zustand";
+import { findByStoreName } from "@vendetta/metro";
+import { storage } from "@vendetta/plugin";
 import subscribeToFluxDispatcher from "../utils/subscribeToFluxDispatcher";
+import { React, ReactNative as RN, stylesheet } from "@vendetta/metro/common";
 
-const MMKVManager = ReactNative.NativeModules.MMKVManager as StateStorage;
+const UserStore = findByStoreName("UserStore");
 
-const UserStore = findByStoreName('UserStore');
-
-interface AuthorizationState {
-    token: string | null;
-    tokens: Record<string, string>;
-    init: () => void;
-    setToken: (token: string) => void;
-    isAuthorized: () => boolean;
+if (!storage.decor_auth) {
+  storage.decor_auth = { tokens: {} as Record<string, string> };
 }
 
-export const useAuthorizationStore = create<AuthorizationState>(
-    persist(
-        (set, get) => ({
-            token: null,
-            tokens: {},
-            init: () => set({ token: get().tokens[UserStore.getCurrentUser().id] ?? null }),
-            setToken: (token: string) => set({ token, tokens: { ...get().tokens, [UserStore.getCurrentUser().id]: token } }),
-            isAuthorized: () => !!get().token,
-        }),
-        {
-            name: 'decor-auth',
-            getStorage: () => MMKVManager,
-            partialize: state => ({ tokens: state.tokens }),
-            onRehydrateStorage: () => state => state.init()
-        }
-    )
+interface AuthorizationState {
+  token: string | null;
+  tokens: Record<string, string>;
+  init: () => void;
+  setToken: (token: string) => void;
+  isAuthorized: () => boolean;
+}
+
+const listeners = new Set<() => void>();
+
+const state: AuthorizationState = {
+  token: null,
+  tokens: storage.decor_auth.tokens ?? {},
+
+  init() {
+    const user = UserStore?.getCurrentUser?.();
+    if (!user?.id) return;
+
+    state.tokens = storage.decor_auth.tokens ?? {};
+    state.token = state.tokens[user.id] ?? null;
+    notify();
+  },
+
+  setToken(token: string) {
+    const user = UserStore?.getCurrentUser?.();
+    if (!user?.id) return;
+
+    state.tokens = { ...state.tokens, [user.id]: token };
+    storage.decor_auth.tokens = state.tokens;
+    state.token = token;
+    notify();
+  },
+
+  isAuthorized() {
+    return !!state.token;
+  },
+};
+
+function notify() {
+  for (const l of listeners) l();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function useAuthorizationStoreHook(): AuthorizationState {
+  const [, forceRender] = React.useState(0);
+
+  React.useEffect(() => {
+    const unsub = subscribe(() => forceRender((x) => x + 1));
+    return unsub;
+  }, []);
+
+  return state;
+}
+
+type StoreHook = typeof useAuthorizationStoreHook & {
+  getState: () => AuthorizationState;
+  subscribe: (listener: () => void) => () => void;
+};
+
+const useAuthorizationStore = useAuthorizationStoreHook as StoreHook;
+useAuthorizationStore.getState = () => state;
+useAuthorizationStore.subscribe = subscribe;
+
+state.init();
+
+export const unsubscribe = subscribeToFluxDispatcher("CONNECTION_OPEN", () =>
+  state.init(),
 );
 
-export const unsubscribe = subscribeToFluxDispatcher('CONNECTION_OPEN', () => useAuthorizationStore.getState().init())
+export { useAuthorizationStore };
