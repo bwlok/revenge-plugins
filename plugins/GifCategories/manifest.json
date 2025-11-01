@@ -1,0 +1,14 @@
+{
+    "name": "Gif Categories",
+    "description": "Create and manage personalized GIF categories",
+    "authors": [
+        {
+            "name": "Bwlok",
+            "id": "501827585806827520"
+        }
+    ],
+    "main": "src/index.tsx",
+    "vendetta": {
+        "icon": "gif"
+    }
+}
