@@ -1,0 +1,14 @@
+{
+    "name": "Let it Snow",
+    "description": "Render Snowflakes on the screen",
+    "authors": [
+        {
+            "name": "Bwlok",
+            "id": "501827585806827520"
+        }
+    ],
+    "main": "src/index.tsx",
+    "vendetta": {
+        "icon": "wumpus_snowglobe_premium120"
+    }
+}
