@@ -22,7 +22,7 @@ export default () =>
 				cancelCompletesFlow: false,
 				callback: async ({ location }) => {
 					const url = new URL(location);
-					url.searchParams.append('client', 'vendetta');
+					url.searchParams.append('client', 'revenge');
 
 					const req = await fetch(url);
 
